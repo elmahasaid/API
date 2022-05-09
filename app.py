@@ -1,5 +1,5 @@
 # pip install fastapi uvicorn pandas lightgbm
-# conda create -- myenv python=3.6
+# conda create -- myenv python=3.6 a revoir
 # conda activate myenv
 
 #from fastapi import FastAPI
