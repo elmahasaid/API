@@ -1,92 +1,68 @@
-import time  # to simulate a real time data, time loop
+import pandas as pd 
+import streamlit as st 
+import requests as req 
+import joblib 
+import streamlit.components.v1 as components
+X_test = pd.read_csv("X_test.csv")
+list_explain = joblib.load("list_exp.joblib")
+#option = st.selectbox( " veuillez choisir un client", list(X_test.index))
+#st.write(str(option))
+#url = "http://elmaha269.pythonanywhere.com/predict"
+#data = {"index":option}
+#reponse = req.post(url=url, json = data)
+#st.write(reponse.text)
+# streamlit run dashboard.py
 
-import numpy as np  # np mean, np random
-import pandas as pd  # read csv, df manipulation
-import plotly.express as px  # interactive charts
-import streamlit as st  # 🎈 data web app development
 
-# read csv from a github repo
-dataset_url = "https://raw.githubusercontent.com/Lexie88rus/bank-marketing-analysis/master/bank.csv"
+#from urllib.request import urlopen 
+#import json
+#X_test = pd.read_csv("X_test.csv")
 
-# read csv from a URL
-@st.experimental_memo
-def get_data() -> pd.DataFrame:
-    return pd.read_csv(dataset_url)
+#affichage du tableau de board
+st.title('Dashborad Credit Scoring')
+st.subheader("Prédictions de scoring client")
+list_id = list(X_test.index)
+id_client = st.text_input("Veuillez choisir un client",)
+#option = st.selectbox("Veuillez choisir un client", list(X_test.index))
+#st.write(str(option))
 
-df = get_data()
+#Appel de l'API
 
-st.set_page_config(
-    page_title="Real-Time Data Science Dashboard",
-    page_icon="✅",
-    layout="wide",
-)
+if id_client == '':  #lorsque rien n'a été saisi
+    st.write('Exemples id_client : 12, 8957, 3692, 89')
 
-# dashboard title
-st.title("Real-Time / Live Data Science Dashboard")
+elif(int(id_client) in list_id):
 
-# top-level filters
-job_filter = st.selectbox("Select the Job", pd.unique(df["job"]))
+    #APP_url = "http://elmaha269.pythonanywhere.com/predict" + id_client
+    APP_url = "http://elmaha269.pythonanywhere.com/predict"
 
-# creating a single-element container
-placeholder = st.empty()
+    with st.spinner("Chargement du score du client..."):
+        APP_data = {"index":id_client}
+        json_reponse = req.post(url = APP_url, json = APP_data).json()
 
-# dataframe filter
-df = df[df["job"] == job_filter]
-
-# near real-time / live feed simulation
-for seconds in range(200):
-
-    df["age_new"] = df["age"] * np.random.choice(range(1, 5))
-    df["balance_new"] = df["balance"] * np.random.choice(range(1, 5))
-
-    # creating KPIs
-    avg_age = np.mean(df["age_new"])
-
-    count_married = int(
-        df[(df["marital"] == "married")]["marital"].count()
-        + np.random.choice(range(1, 30))
-    )
-
-    balance = np.mean(df["balance_new"])
-
-    with placeholder.container():
-
-        # create three columns
-        kpi1, kpi2, kpi3 = st.columns(3)
-
-        # fill in those three columns with respective metrics or KPIs
-        kpi1.metric(
-            label="Age ⏳",
-            value=round(avg_age),
-            delta=round(avg_age) - 10,
-        )
+        #APP_data = json.load(json_url.read())
         
-        kpi2.metric(
-            label="Married Count 💍",
-            value=int(count_married),
-            delta=-10 + count_married,
-        )
+        prediction= int(json_reponse['prediction'])
+        probability = json_reponse['probability']
+        def etat_client(pred):
+            switch = {
+                1: 'La prédiction du client par rapport au crédit est de ' "" + str(prediction)+ '(non accordé) :' +" " 'Client à risque  d\'une approximation ' + str(round(probability*100))+'%' + " " 'de risque de défaut.',
+                0: 'La prédiction du client par rapport au crédit est de ' "" + str(prediction)+ '(accordé) :' +" " 'Client peu de risque  d\'une approximation ' + str(round(100 - probability*100))+'%' + " " 'de risque de défaut.'
+            }
+            return switch.get(pred)
         
-        kpi3.metric(
-            label="A/C Balance ＄",
-            value=f"$ {round(balance,2)} ",
-            delta=-round(balance / count_married) * 100,
-        )
 
-        # create two columns for charts
-        fig_col1, fig_col2 = st.columns(2)
-        with fig_col1:
-            st.markdown("### First Chart")
-            fig = px.density_heatmap(
-                data_frame=df, y="age_new", x="marital"
-            )
-            st.write(fig)
-            
-        with fig_col2:
-            st.markdown("### Second Chart")
-            fig2 = px.histogram(data_frame=df, x="age_new")
-            st.write(fig2)
+    
+        #if prediction == 1:
+         #   etat_client = 'Client à risque'+ str(round(probability*100))
+        #else:
+         #   etat_client= "Client peu de risque" + " " + str(round(100 - probability*100))+ '%'
 
-        st.markdown("### Detailed Data View")
-        st.dataframe(df)
-        time.sleep(1)
+        #message = 'La prédiction du client est de : **'+ str(prediction) + "," " " + etat_client + '** avec **' + str(round(probability*100)) +'%** de risque de défaut.'
+        message = etat_client(prediction)
+
+        st.markdown(message)
+        components.html(list_explain[int(id_client)].as_html(),height = 500)
+        
+else: 
+    st.write('Identifiant non reconnu')
