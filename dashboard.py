@@ -46,8 +46,8 @@ elif(int(id_client) in list_id):
         probability = json_reponse['probability']
         def etat_client(pred):
             switch = {
-                1: 'La prédiction du client par rapport au crédit est de ' "" + str(prediction)+ '(non accordé) :' +" " 'Client à risque  d\'une approximation ' + str(round(probability*100))+'%' + " " 'de risque de défaut.',
-                0: 'La prédiction du client par rapport au crédit est de ' "" + str(prediction)+ '(accordé) :' +" " 'Client peu de risque  d\'une approximation ' + str(round(100 - probability*100))+'%' + " " 'de risque de défaut.'
+                1: 'La prédiction du client par rapport au crédit est de ' "" + str(prediction)+ '(non accordé) :' +" " 'Client à risque  d\'une approximation de ' + str(round(probability*100))+'%' + " " 'de risque de défaut.',
+                0: 'La prédiction du client par rapport au crédit est de ' "" + str(prediction)+ '(accordé) :' +" " 'Client peu de risque  d\'une approximation de ' + str(round(100 - probability*100))+'%' + " " 'de risque de défaut.'
             }
             return switch.get(pred)
         
